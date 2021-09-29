@@ -27,6 +27,7 @@ import numpy as np
 FILES_TO_KEEP = {
     "gromacs": [".*/bench.job", ".*.tpr", ".*.mdp"],
     "namd": [".*/bench.job", ".*.namd", ".*.psf", ".*.pdb"],
+    "rest2": [".*/bench.job", ".*.tpr", ".*.mdp"],
 }
 
 PARSE_ENGINE = {
@@ -44,6 +45,14 @@ PARSE_ENGINE = {
         "ncores_return": lambda line: int(line.split()[3]),
         "analyze": "*out*",
     },
+    "rest2": {
+        "performance": "Performance",
+        "performance_return": lambda line: float(line.split()[1]),
+        "ncores": "Running on",
+        "ncores_return": lambda line: int(line.split()[6]),
+        "analyze": "**/[!#]*log*",
+    },
+
 }
 
 
@@ -102,6 +111,7 @@ def analyze_benchmark(engine, benchmark):
     hyperthreading = np.nan
     module = None
     multidir = np.nan
+    temprange = None
 
     # search all output files
     output_files = glob(
@@ -124,6 +134,9 @@ def analyze_benchmark(engine, benchmark):
 
     if "multidir" in benchmark.categories:
         multidir = benchmark.categories["multidir"]
+
+    if "rest2" in engine.NAME:
+        temprange = benchmark.categories["temprange"]
 
     # Backwards compatibility to version <2
     if "module" not in benchmark.categories and "version" in benchmark.categories:
@@ -155,6 +168,7 @@ def analyze_benchmark(engine, benchmark):
         threads,
         hyperthreading,
         multidir,
+        temprange,
     ]
 
 
@@ -194,6 +208,7 @@ def write_benchmark(
     number_of_threads,
     hyperthreading,
     multidir,
+    temprange,
 ):
     """Generate a benchmark folder with the respective Benchmark object."""
     # Create the `dtr.Treant` object
@@ -211,7 +226,8 @@ def write_benchmark(
 
     # Do MD engine specific things. Here we also format the name.
     name = engine.prepare_benchmark(
-        name=name, relative_path=relative_path, benchmark=benchmark, multidir=multidir
+        name=name, relative_path=relative_path, benchmark=benchmark, multidir=multidir,
+        temprange=temprange,
     )
     if job_name is None:
         job_name = name
@@ -230,6 +246,7 @@ def write_benchmark(
         "hyperthreading": hyperthreading,
         "version": 3,
         "multidir": multidir,
+        "temprange": temprange,
     }
 
     # Add some time buffer to the requested time. Otherwise the queuing system

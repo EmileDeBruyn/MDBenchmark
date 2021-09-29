@@ -21,9 +21,9 @@ import os
 from collections import defaultdict
 
 from mdbenchmark import console
-from mdbenchmark.mdengines import gromacs, namd
+from mdbenchmark.mdengines import gromacs, namd, rest2
 
-SUPPORTED_ENGINES = {"gromacs": gromacs, "namd": namd}
+SUPPORTED_ENGINES = {"gromacs": gromacs, "namd": namd, "rest2": rest2}
 
 
 def detect_md_engine(modulename):
@@ -61,6 +61,7 @@ def prepare_module_name(module, skip_validation=False):
                 "--skip-validation",
                 "gromacs/dummy",
                 "namd/dummy",
+                "rest2/dummy",
             )
         console.error("We were not able to determine the module name.")
 

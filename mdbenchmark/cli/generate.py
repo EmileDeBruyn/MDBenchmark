@@ -64,6 +64,7 @@ def do_generate(
     number_of_ranks,
     enable_hyperthreading,
     multidir,
+    temprange,
 ):
     """Generate a bunch of benchmarks."""
 
@@ -145,6 +146,7 @@ def do_generate(
         number_of_ranks,
         enable_hyperthreading,
         multidir,
+        temprange,
     )
     df = pd.DataFrame(data, columns=benchmark_version.generate_categories)
 

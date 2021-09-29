@@ -184,6 +184,13 @@ def analyze(directory, save_csv):
     type=int,
     default=(1,),
 )
+@click.option(
+    "--temprange",
+    "temprange",
+    default="300,500",
+    type=str,
+    help="Comma-separated string giving the minimum and maximum temperature used for a REST2 simulation.",
+)
 def generate(
     name,
     cpu,
@@ -201,6 +208,7 @@ def generate(
     number_of_ranks,
     enable_hyperthreading,
     multidir,
+    temprange,
 ):
     """Generate benchmarks for molecular dynamics simulations.
 
@@ -241,6 +249,7 @@ def generate(
         number_of_ranks=number_of_ranks,
         enable_hyperthreading=enable_hyperthreading,
         multidir=multidir,
+        temprange=temprange,
     )
 
 

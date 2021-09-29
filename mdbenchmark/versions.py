@@ -134,6 +134,7 @@ class Version3Categories(VersionCategories):
         "number_of_threads",
         "hyperthreading",
         "multidir",
+        "temprange",
     ]
     generate_mapping = {
         "engine": "engine",
@@ -149,6 +150,7 @@ class Version3Categories(VersionCategories):
         "number_of_threads": "number_of_threads",
         "hyperthreading": "hyperthreading",
         "multidir": "multidir",
+        "temprange": "temprange",
     }
     generate_printing = [
         "name",
@@ -174,6 +176,7 @@ class Version3Categories(VersionCategories):
         "number_of_threads",
         "hyperthreading",
         "multidir",
+        "temprange",
         "version",
     ]
     analyze_printing = [
@@ -201,6 +204,7 @@ class Version3Categories(VersionCategories):
         "number_of_threads",
         "hyperthreading",
         "multidir",
+        "temprange",
         "version",
     ]
     category_mapping = {

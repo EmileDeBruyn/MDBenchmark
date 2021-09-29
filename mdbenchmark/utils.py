@@ -111,6 +111,7 @@ def construct_generate_data(
     number_of_ranks,
     enable_hyperthreading,
     multidir,
+    temprange,
 ):
     data = []
     for module in modules:
@@ -157,6 +158,7 @@ def construct_generate_data(
                                 threads,
                                 enable_hyperthreading,
                                 nsim,
+                                temprange,
                             ]
                         )
 

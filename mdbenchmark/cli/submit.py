@@ -91,7 +91,7 @@ def do_submit(directory, force_restart, yes):
     # Reformat NaN values nicely into question marks.
     df_to_print = df.replace(np.nan, "?")
 
-    columns_to_drop = ["ncores", "version"]
+    columns_to_drop = ["ncores", "version", "temprange"]
     df_to_print = df.drop(columns=columns_to_drop)
 
     # Consolidate the data by grouping on the number of nodes and print to the

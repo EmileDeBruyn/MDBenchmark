@@ -36,7 +36,7 @@ def do_analyze(directory, save_csv):
     )
 
     # Remove the versions column from the DataFrame
-    columns_to_drop = ["version"]
+    columns_to_drop = ["version", "temprange"]
     df = df.drop(columns=columns_to_drop)
 
     if save_csv is not None:

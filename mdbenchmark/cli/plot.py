@@ -59,11 +59,13 @@ def get_xsteps(size, min_x, plot_cores, xtick_step):
     return step
 
 
-def plot_projection(df, selection, color, performance_column, ax=None):
+def plot_projection(df, selection, color, performance_column, scaling, ax=None):
     # Grab x and y values
     xs = df[selection].iloc[0:2].values.tolist()
     ys = df[performance_column].iloc[0:2].values.tolist()
-
+    ys[1] = ys[0] * scaling
+    
+    
     # Calculate slope and intercept
     p1, p2 = list(zip(xs, ys))
     slope, intercept = calc_slope_intercept(p1, p2)
@@ -77,15 +79,16 @@ def plot_projection(df, selection, color, performance_column, ax=None):
     return ax
 
 
-def plot_line(df, selection, label, fit, performance_column="performance", ax=None):
+def plot_line(df, selection, label, fit, performance_column="performance", scaling=2, ax=None):
     mask = np.isfinite(df[performance_column])
     p = ax.plot(
         df[selection][mask],
         df[performance_column][mask],
         ls="solid",
         marker="o",
-        ms="10",
+        ms="8",
         label=label,
+        # alpha=0.75,
     )
     color = p[0].get_color()
 
@@ -95,8 +98,17 @@ def plot_line(df, selection, label, fit, performance_column="performance", ax=No
             selection=selection,
             color=color,
             performance_column=performance_column,
+            scaling=scaling,
             ax=ax,
         )
+        # plot_projection(
+        #     df=df,
+        #     selection=selection,
+        #     color=color,
+        #     performance_column=performance_column,
+        #     scaling=1.5,
+        #     ax=ax,
+        # )
 
     return ax
 

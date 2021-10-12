@@ -33,6 +33,7 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
     top_file = name + ".top"
     gro_file = name + ".gro"
     mdp_file = name + ".mdp"
+    index_file = name + ".ndx"
 
     # filepath = os.path.join(relative_path, full_filename)
 
@@ -56,7 +57,10 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
         rep_string = "rep" + f"{rep+1:02d}"
         subdir = benchmark[rep_string + "/"].make()
         plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/rep.top"
-        grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -quiet &> {subdir}/grompp.out &"
+        if os.path.exists(index_file):
+            grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -n {index_file} -quiet &> {subdir}/grompp.out"
+        else:
+            grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -quiet &> {subdir}/grompp.out"
         subprocess.Popen(plumed_cmd + "; " + grompp_cmd, shell=True, executable="/bin/bash")
 
     return name

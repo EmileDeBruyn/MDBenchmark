@@ -18,12 +18,11 @@
 # You should have received a copy of the GNU General Public License
 # along with MDBenchmark.  If not, see <http://www.gnu.org/licenses/>.
 import os
-# import string
-import subprocess
 import numpy as np
-# from shutil import copyfile
 
 from mdbenchmark import console
+from concurrent.futures import ThreadPoolExecutor
+from subprocess import call
 
 NAME = "rest2"
 
@@ -52,16 +51,19 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
 
     plumeddat = benchmark["plumed.dat"].touch()
 
-    for rep, temp in enumerate(temps):
-        l = f"{temps[0] / temp:.6f}"
-        rep_string = "rep" + f"{rep+1:02d}"
-        subdir = benchmark[rep_string + "/"].make()
-        plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/rep.top"
-        if os.path.exists(index_file):
-            grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -n {index_file} -quiet &> {subdir}/grompp.out"
-        else:
-            grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -quiet &> {subdir}/grompp.out"
-        subprocess.Popen(plumed_cmd + "; " + grompp_cmd, shell=True, executable="/bin/bash")
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        for rep, temp in enumerate(temps):
+            l = f"{temps[0] / temp:.6f}"
+            rep_string = "rep" + f"{rep+1:02d}"
+            subdir = benchmark[rep_string + "/"].make()
+            plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/rep.top"
+
+            if os.path.exists(index_file):
+                grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -n {index_file} -quiet &> {subdir}/grompp.out"
+            else:
+                grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -quiet &> {subdir}/grompp.out"
+
+            executor.submit(call, f'{plumed_cmd} && {grompp_cmd}', shell=True, executable="/bin/bash")
 
     return name
 

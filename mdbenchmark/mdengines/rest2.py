@@ -23,6 +23,7 @@ import numpy as np
 from mdbenchmark import console
 from concurrent.futures import ThreadPoolExecutor
 from subprocess import call
+from shutil import copytree
 
 NAME = "rest2"
 
@@ -64,6 +65,13 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
                 grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -quiet &> {subdir}/grompp.out"
 
             executor.submit(call, f'{plumed_cmd} && {grompp_cmd}', shell=True, executable="/bin/bash")
+
+    return name
+
+
+def prepare_copy(name, *args, **kwargs):
+
+    copytree(kwargs["rest2_first_dir"].abspath, kwargs["benchmark"].abspath, dirs_exist_ok=True)
 
     return name
 

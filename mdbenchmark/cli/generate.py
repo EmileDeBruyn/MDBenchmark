@@ -187,14 +187,22 @@ def do_generate(
         show_pos=True,
         label="Generating benchmarks",
     ) as bar:
+        rest2_first_dir = 'first'
         for _, row in bar:
             relative_path, file_basename = os.path.split(row["name"])
             mappings = benchmark_version.generate_mapping
-            kwargs = {"name": file_basename, "relative_path": relative_path}
+            kwargs = {
+                "name": file_basename,
+                "relative_path": relative_path,
+                "rest2_first_dir": rest2_first_dir
+            }
             for key, value in mappings.items():
                 kwargs[value] = row[key]
 
-            write_benchmark(**kwargs)
+            benchmark = write_benchmark(**kwargs)
+            if rest2_first_dir == 'first':
+                rest2_first_dir = benchmark
+                kwargs["rest2_first_dir"] = rest2_first_dir
 
     # Finish up by telling the user how to submit the benchmarks
     console.info(

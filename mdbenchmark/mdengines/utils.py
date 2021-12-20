@@ -27,7 +27,7 @@ import numpy as np
 FILES_TO_KEEP = {
     "gromacs": [".*/bench.job", ".*.tpr", ".*.mdp"],
     "namd": [".*/bench.job", ".*.namd", ".*.psf", ".*.pdb"],
-    "rest2": [".*/bench.job", ".*.tpr", ".*.mdp"],
+    "rest2": [".*/bench.job", ".*.tpr", ".*.mdp", "plumed.dat", "*.top"],
 }
 
 PARSE_ENGINE = {

@@ -59,7 +59,7 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
         plumed_process = subprocess.Popen(plumed_cmd, shell=True, executable="/bin/bash")
         plumed_process.wait()
         # grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -quiet &> {subdir}/grompp.out &"
-        grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top &> {subdir}/grompp.out &"
+        grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top &> {subdir}/grompp.out &"
         subprocess.Popen(grompp_cmd, shell=True, executable="/bin/bash")
 
     return name

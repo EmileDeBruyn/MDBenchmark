@@ -21,6 +21,7 @@ import os
 # import string
 import subprocess
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor, as_completed
 # from shutil import copyfile
 
 from mdbenchmark import console
@@ -50,8 +51,8 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
     temps = calc_replica_temps(N_replicas, temp_range)
 
     plumeddat = benchmark["plumed.dat"].touch()
-
-    for rep, temp in enumerate(temps):
+    # for rep, temp in enumerate(temps):
+    def task(rep, temp):
         l = f"{temps[0] / temp:.6f}"
         rep_string = "rep" + f"{rep+1:02d}"
         subdir = benchmark[rep_string + "/"].make()
@@ -59,8 +60,14 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
         plumed_process = subprocess.Popen(plumed_cmd, shell=True, executable="/bin/bash")
         plumed_process.wait()
         # grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -quiet &> {subdir}/grompp.out &"
-        grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top &> {subdir}/grompp.out &"
-        subprocess.Popen(grompp_cmd, shell=True, executable="/bin/bash")
+        grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top &> {subdir}/grompp.out"
+        proc = subprocess.Popen(grompp_cmd, shell=True, executable="/bin/bash")
+        proc.wait()
+        return f'{benchmark}, replica {rep+1} prepared.'
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        for result in executor.map(task, range(N_replicas), temps):
+            print(result)
 
     return name
 

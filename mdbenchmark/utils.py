@@ -24,6 +24,7 @@ import socket
 import click
 import datreant as dtr
 import pandas as pd
+import numpy as np
 import xdg
 from jinja2 import ChoiceLoader, Environment, FileSystemLoader, PackageLoader
 from tabulate import tabulate
@@ -107,6 +108,7 @@ def construct_generate_data(
     time,
     min_nodes,
     max_nodes,
+    nodes,
     processor,
     number_of_ranks,
     enable_hyperthreading,
@@ -134,7 +136,8 @@ def construct_generate_data(
             base_directory = dtr.Tree(directory)
 
             # Do the main iteration over nodes, ranks and number of simulations
-            for nodes in range(min_nodes, max_nodes + 1):
+            _node_range = range(min_nodes, max_nodes + 1) if nodes == False else np.array([int(x) for x in nodes.split(",")])
+            for nodes in _node_range:
                 for _ranks in number_of_ranks:
                     ranks, threads = processor.get_ranks_and_threads(
                         _ranks, with_hyperthreading=enable_hyperthreading

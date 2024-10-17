@@ -122,6 +122,12 @@ def analyze(directory, save_csv):
     type=int,
 )
 @click.option(
+    "--nodes",
+    help="Comma-separated string list of the number of nodes to request.",
+    default=None,
+    type=str,
+)
+@click.option(
     "--time",
     help="Run time for benchmark in minutes.",
     default=15,
@@ -199,6 +205,7 @@ def generate(
     host,
     min_nodes,
     max_nodes,
+    nodes,
     time,
     skip_validation,
     job_name,
@@ -240,6 +247,7 @@ def generate(
         host=host,
         min_nodes=min_nodes,
         max_nodes=max_nodes,
+        nodes=nodes,
         time=time,
         skip_validation=skip_validation,
         job_name=job_name,

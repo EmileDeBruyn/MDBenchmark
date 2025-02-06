@@ -28,45 +28,52 @@ from mdbenchmark import console
 
 NAME = "rest2"
 
+
+def calc_state_temps(N_states, temp_range):
+    state_temps = temp_range.min() \
+    * np.exp(np.arange(0, N_states) * np.log(temp_range.max()/temp_range.min())/(N_states - 1))
+    return state_temps
+
+
 def prepare_benchmark(name, relative_path, *args, **kwargs):
     benchmark = kwargs["benchmark"]
 
-    top_file = name + ".top"
-    gro_file = name + ".gro"
-    mdp_file = name + ".mdp"
+    # top_file = name + ".top"
+    # gro_file = name + ".gro"
+    # mdp_file = name + ".mdp"
+    top_file = benchmark[name + ".top"]
+    gro_file = benchmark[name + ".gro"]
+    mdp_file = benchmark[name + ".mdp"]
 
     # filepath = os.path.join(relative_path, full_filename)
 
     if not kwargs["multidir"] >= 1:
         raise ValueError("For REST2 benchmarks, the multidir option must be given a number larger than 1")
 
-    N_replicas = kwargs["multidir"]
+    N_states = kwargs["multidir"]
     temp_range = np.array([float(x) for x in kwargs["temprange"].split(",")])
 
-    def calc_replica_temps(N_replicas, temp_range):
-        replica_temps = temp_range.min() \
-            * np.exp(np.arange(0, N_replicas) * np.log(temp_range.max()/temp_range.min())/(N_replicas - 1))
-        return replica_temps
-
-    temps = calc_replica_temps(N_replicas, temp_range)
+    temps = calc_state_temps(N_states, temp_range)
 
     plumeddat = benchmark["plumed.dat"].touch()
-    # for rep, temp in enumerate(temps):
-    def task(rep, temp):
+    # for state, temp in enumerate(temps):
+    def task(state, temp):
         l = f"{temps[0] / temp:.6f}"
-        rep_string = "rep" + f"{rep+1:02d}"
-        subdir = benchmark[rep_string + "/"].make()
-        plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/rep.top"
+        state_string = "state" + f"{state+1:02d}"
+        subdir = benchmark[state_string + "/"].make()
+        # plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state{state+1:02d}.top"
+        plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state.top"
         plumed_process = subprocess.Popen(plumed_cmd, shell=True, executable="/bin/bash")
         plumed_process.wait()
-        # grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top -quiet &> {subdir}/grompp.out &"
-        grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/rep.tpr -c {gro_file} -f {mdp_file} -p {subdir}/rep.top &> {subdir}/grompp.out"
+        # grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/state.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state.top -quiet &> {subdir}/grompp.out &"
+        # grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/state{state+1:02d}.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state{state+1:02d}.top &> {subdir}/grompp.out"
+        grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/state.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state.top &> {subdir}/grompp.out"
         proc = subprocess.Popen(grompp_cmd, shell=True, executable="/bin/bash")
         proc.wait()
-        return f'{benchmark}, replica {rep+1} prepared.'
+        return f'{benchmark}, state {state+1} prepared.'
 
     with ThreadPoolExecutor(max_workers=8) as executor:
-        for result in executor.map(task, range(N_replicas), temps):
+        for result in executor.map(task, range(N_states), temps):
             print(result)
 
     return name
@@ -77,7 +84,7 @@ def prepare_multidir(multidir):
 
     multidir_string = "-multidir"
     for i in range(multidir):
-        multidir_string += " rep" + f"{i+1:02d}"
+        multidir_string += " state" + f"{i+1:02d}"
 
     return multidir_string
 

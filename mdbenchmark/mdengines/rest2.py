@@ -38,12 +38,13 @@ def calc_state_temps(N_states, temp_range):
 def prepare_benchmark(name, relative_path, *args, **kwargs):
     benchmark = kwargs["benchmark"]
 
-    # top_file = name + ".top"
-    # gro_file = name + ".gro"
-    # mdp_file = name + ".mdp"
-    top_file = benchmark[name + ".top"]
-    gro_file = benchmark[name + ".gro"]
-    mdp_file = benchmark[name + ".mdp"]
+    top_file = name + ".top"
+    gro_file = name + ".gro"
+    mdp_file = name + ".mdp"
+
+    # top_file = benchmark[name + ".top"]
+    # gro_file = benchmark[name + ".gro"]
+    # mdp_file = benchmark[name + ".mdp"]
 
     # filepath = os.path.join(relative_path, full_filename)
 

@@ -63,7 +63,7 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
         state_string = "state" + f"{state+1:02d}"
         subdir = benchmark[state_string + "/"].make()
         # plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state{state+1:02d}.top"
-        plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state.top"
+        plumed_cmd = f"plumed --no-mpi partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state.top"
         plumed_process = subprocess.Popen(plumed_cmd, shell=True, executable="/bin/bash")
         plumed_process.wait()
         # grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/state.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state.top -quiet &> {subdir}/grompp.out &"

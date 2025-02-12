@@ -73,7 +73,7 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
         proc.wait()
         return f'{benchmark}, state {state+1} prepared.'
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=12) as executor:
         for result in executor.map(task, range(N_states), temps):
             print(result)
 

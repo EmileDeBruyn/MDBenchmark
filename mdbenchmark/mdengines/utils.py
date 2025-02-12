@@ -209,6 +209,8 @@ def write_benchmark(
     hyperthreading,
     multidir,
     temprange,
+    benchmark_counter,
+    first_benchmark,
 ):
     """Generate a benchmark folder with the respective Benchmark object."""
     # Create the `dtr.Treant` object
@@ -227,7 +229,7 @@ def write_benchmark(
     # Do MD engine specific things. Here we also format the name.
     name = engine.prepare_benchmark(
         name=name, relative_path=relative_path, benchmark=benchmark, multidir=multidir,
-        temprange=temprange,
+        temprange=temprange, benchmark_counter=benchmark_counter, first_benchmark=first_benchmark
     )
     if job_name is None:
         job_name = name
@@ -275,3 +277,5 @@ def write_benchmark(
     # Write the actual job script that is going to be submitted to the cluster
     with open(benchmark["bench.job"].relpath, "w") as fh:
         fh.write(script)
+
+    return benchmark

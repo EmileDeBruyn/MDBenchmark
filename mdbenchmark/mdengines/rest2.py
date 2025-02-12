@@ -19,6 +19,7 @@
 # along with MDBenchmark.  If not, see <http://www.gnu.org/licenses/>.
 import os
 # import string
+import shutil
 import subprocess
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -35,8 +36,15 @@ def calc_state_temps(N_states, temp_range):
     return state_temps
 
 
+def copy_first_benchmark(relative_path, first_benchmark_path):
+    # print(f"{relative_path} to {first_benchmark_path}")
+    shutil.copytree(first_benchmark_path, relative_path, dirs_exist_ok=True)
+    print(f"Copied first REST2 benchmark to {relative_path}.")
+
+
 def prepare_benchmark(name, relative_path, *args, **kwargs):
     benchmark = kwargs["benchmark"]
+    # print(benchmark)
 
     top_file = name + ".top"
     gro_file = name + ".gro"
@@ -51,32 +59,39 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
     if not kwargs["multidir"] >= 1:
         raise ValueError("For REST2 benchmarks, the multidir option must be given a number larger than 1")
 
-    N_states = kwargs["multidir"]
-    temp_range = np.array([float(x) for x in kwargs["temprange"].split(",")])
+    if kwargs["benchmark_counter"] != 0:
+        copy_first_benchmark(benchmark, kwargs["first_benchmark"])
 
-    temps = calc_state_temps(N_states, temp_range)
+    else:
+        N_states = kwargs["multidir"]
+        temp_range = np.array([float(x) for x in kwargs["temprange"].split(",")])
 
-    plumeddat = benchmark["plumed.dat"].touch()
-    # for state, temp in enumerate(temps):
-    def task(state, temp):
-        l = f"{temps[0] / temp:.6f}"
-        state_string = "state" + f"{state+1:02d}"
-        subdir = benchmark[state_string + "/"].make()
-        # plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state{state+1:02d}.top"
-        plumed_cmd = f"plumed --no-mpi partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state.top"
-        plumed_process = subprocess.Popen(plumed_cmd, shell=True, executable="/bin/bash")
-        plumed_process.wait()
-        # grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/state.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state.top -quiet &> {subdir}/grompp.out &"
-        # grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/state{state+1:02d}.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state{state+1:02d}.top &> {subdir}/grompp.out"
-        grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/state.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state.top &> {subdir}/grompp.out"
-        proc = subprocess.Popen(grompp_cmd, shell=True, executable="/bin/bash")
-        proc.wait()
-        return f'{benchmark}, state {state+1} prepared.'
+        temps = calc_state_temps(N_states, temp_range)
 
-    with ThreadPoolExecutor(max_workers=12) as executor:
-        for result in executor.map(task, range(N_states), temps):
-            print(result)
+        plumeddat = benchmark["plumed.dat"].touch()
+        # for state, temp in enumerate(temps):
+        def task(state, temp):
+            l = f"{temps[0] / temp:.6f}"
+            state_string = "state" + f"{state+1:02d}"
+            subdir = benchmark[state_string + "/"].make()
+            # plumed_cmd = f"plumed partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state{state+1:02d}.top"
+            plumed_cmd = f"plumed --no-mpi partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state.top"
+            plumed_process = subprocess.Popen(plumed_cmd, shell=True, executable="/bin/bash")
+            plumed_process.wait()
+            # grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/state.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state.top -quiet &> {subdir}/grompp.out &"
+            # grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/state{state+1:02d}.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state{state+1:02d}.top &> {subdir}/grompp.out"
+            grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/state.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state.top &> {subdir}/grompp.out"
+            proc = subprocess.Popen(grompp_cmd, shell=True, executable="/bin/bash")
+            proc.wait()
+            return
+            # return f'{benchmark}, state {state+1} prepared.'
 
+        with ThreadPoolExecutor(max_workers=12) as executor:
+            for result in executor.map(task, range(N_states), temps):
+                pass
+                # print(result)
+
+        print(f"Made first REST2 benchmark in {benchmark}.")
     return name
 
 

@@ -189,14 +189,22 @@ def do_generate(
         show_pos=True,
         label="Generating benchmarks",
     ) as bar:
+        benchmark_counter = 0
         for _, row in bar:
             relative_path, file_basename = os.path.split(row["name"])
             mappings = benchmark_version.generate_mapping
-            kwargs = {"name": file_basename, "relative_path": relative_path}
+            if benchmark_counter == 0:
+                first_benchmark = None
+            kwargs = {"name": file_basename, "benchmark_counter": benchmark_counter, 
+                      "relative_path": relative_path, "first_benchmark": first_benchmark}
             for key, value in mappings.items():
                 kwargs[value] = row[key]
 
-            write_benchmark(**kwargs)
+            if benchmark_counter == 0:
+                first_benchmark = write_benchmark(**kwargs)
+            else:
+                _ = write_benchmark(**kwargs)
+            benchmark_counter += 1
 
     # Finish up by telling the user how to submit the benchmarks
     console.info(

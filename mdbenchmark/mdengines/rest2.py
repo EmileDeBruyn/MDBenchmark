@@ -21,6 +21,7 @@ import os
 # import string
 import shutil
 import subprocess
+import re
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor, as_completed
 # from shutil import copyfile
@@ -78,6 +79,7 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
             plumed_cmd = f"plumed --no-mpi partial_tempering {l} < {top_file} | tail -n +2 > {subdir}/state.top"
             plumed_process = subprocess.Popen(plumed_cmd, shell=True, executable="/bin/bash")
             plumed_process.wait()
+            # process_cmaps(l, f"{subdir}/state.top")
             # grompp_cmd = f"gmx grompp -maxwarn 1 -o {subdir}/state.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state.top -quiet &> {subdir}/grompp.out &"
             # grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/state{state+1:02d}.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state{state+1:02d}.top &> {subdir}/grompp.out"
             grompp_cmd = f"gmx -nocopyright -nobackup grompp -maxwarn 2 -o {subdir}/state.tpr -c {gro_file} -f {mdp_file} -p {subdir}/state.top &> {subdir}/grompp.out"
@@ -116,3 +118,44 @@ def check_input_file_exists(name):
             )
 
     return True
+
+
+def process_cmaps(lambda_value, file_path):
+    lambda_value = float(lambda_value)
+    cmaptypes = False
+    pairtypes = False
+    output_lines = []
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            if re.search(r'\[ ', line):
+                cmaptypes = False
+                pairtypes = False
+            # if re.search(r'\[ pairtypes \]', line):
+            #     pairtypes = True
+            if re.search(r'\[ cmaptypes \]', line):
+                cmaptypes = True
+
+            # if pairtypes:
+            #     line = re.sub(r';', '; ', line)
+            #     output_lines.append(line)
+            #     fields = line.split()
+            #     if fields and fields[0] != ";" and fields[0] != "[" and len(fields) > 0:
+            #         output_lines.append(f"{fields[0]}_\t{fields[1]}_\t{fields[2]}\t{float(fields[3]):.12f}  {float(fields[4]) * lambda_value:.12f}    ; scaled\n")
+            # elif cmaptypes:
+            if cmaptypes:
+                line = re.sub(r'\\', '', line)
+                fields = line.split()
+                if len(fields) == 8:
+                    output_lines.append(f"{fields[0]} {fields[1]} {fields[2]} {fields[3]} {fields[4]} {fields[5]} {fields[6]} {fields[7]}\\\n")
+                elif len(fields) == 10:
+                    output_lines.append(f"{float(fields[0]) * lambda_value:.9f} {float(fields[1]) * lambda_value:.9f} {float(fields[2]) * lambda_value:.9f} {float(fields[3]) * lambda_value:.9f} {float(fields[4]) * lambda_value:.9f} {float(fields[5]) * lambda_value:.9f} {float(fields[6]) * lambda_value:.9f} {float(fields[7]) * lambda_value:.9f} {float(fields[8]) * lambda_value:.9f} {float(fields[9]) * lambda_value:.9f}\\\n")
+                elif len(fields) == 6:
+                    output_lines.append(f"{float(fields[0]) * lambda_value:.9f} {float(fields[1]) * lambda_value:.9f} {float(fields[2]) * lambda_value:.9f} {float(fields[3]) * lambda_value:.9f} {float(fields[4]) * lambda_value:.9f} {float(fields[5]) * lambda_value:.9f}\n")
+                else:
+                    output_lines.append(line)
+            else:
+                output_lines.append(line)
+
+    with open(file_path, 'w') as file:
+        file.writelines(output_lines)

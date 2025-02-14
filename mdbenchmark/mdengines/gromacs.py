@@ -25,8 +25,6 @@ from mdbenchmark import console
 
 NAME = "gromacs"
 
-LOWERCASE_LETTERS = string.ascii_lowercase
-
 
 def prepare_benchmark(name, relative_path, *args, **kwargs):
     benchmark = kwargs["benchmark"]
@@ -42,7 +40,8 @@ def prepare_benchmark(name, relative_path, *args, **kwargs):
         copyfile(filepath, benchmark[full_filename].relpath)
     else:
         for i in range(kwargs["multidir"]):
-            subdir = benchmark[LOWERCASE_LETTERS[i] + "/" + full_filename].make()
+            replica_string = "rep" + f"{i+1:02d}"
+            subdir = benchmark[replica_string + "/" + full_filename].make()
             copyfile(filepath, subdir.relpath)
 
     return name
@@ -54,7 +53,7 @@ def prepare_multidir(multidir):
     if multidir != 1:
         multidir_string = "-multidir"
         for i in range(multidir):
-            multidir_string += " " + LOWERCASE_LETTERS[i]
+            multidir_string += " rep" + f"{i+1:02d}"
 
     return multidir_string
 
